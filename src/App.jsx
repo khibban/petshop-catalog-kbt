@@ -7,30 +7,33 @@ function Icon({ name, cls = '' }) {
   return <span className={`material-symbols-outlined ${cls}`}>{name}</span>
 }
 
-function Header() {
+function Header({ q, setQ }) {
   return (
-    <header className="flex justify-between items-center w-full px-margin-page h-header-height sticky top-0 z-50 bg-surface border-b border-surface-variant">
-      <div className="flex items-center gap-8">
-        <Link to="/" className="text-[20px] font-extrabold text-primary">PawStore</Link>
+    <header className="relative flex items-center w-full px-margin-page h-header-height sticky top-0 z-50 bg-surface border-b border-surface-variant">
+      <div className="flex items-center gap-8 shrink-0">
+        <Link to="/" className="text-[20px] font-extrabold text-primary">Paw & Fluff</Link>
         <nav className="hidden md:flex gap-4 text-[14px]">
           <a className="text-on-surface-variant hover:text-primary-container transition-colors" href="#">Promo</a>
-          <a className="text-on-surface-variant hover:text-primary-container transition-colors" href="#">Toko Kami</a>
-          <a className="text-on-surface-variant hover:text-primary-container transition-colors" href="#">Hubungi Kami</a>
+          <a className="text-on-surface-variant hover:text-primary-container transition-colors" href="https://shopee.co.id/paw.n.fluff.petshop" target="_blank" rel="noopener noreferrer">Toko Kami</a>
+          <a className="text-on-surface-variant hover:text-primary-container transition-colors" href="https://www.instagram.com/pawnfluffsby/" target="_blank" rel="noopener noreferrer">Hubungi Kami</a>
         </nav>
       </div>
-      <div className="flex-1 max-w-xl mx-8 relative hidden lg:block">
-        <Icon name="search" cls="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" />
-        <input className="w-full bg-[#f5f3f3] border-none rounded-full py-3 pl-12 pr-4 focus:ring-2 focus:ring-primary placeholder:text-on-surface-variant/50" placeholder="Cari perlengkapan anabul..." type="text" />
-      </div>
-      <div className="flex items-center gap-2">
-        <button className="p-2 text-on-surface hover:bg-[#efeded] rounded-full transition-all"><Icon name="shopping_cart" /></button>
+      <div className="absolute left-1/2 -translate-x-1/2 w-full max-w-2xl px-4 hidden lg:block">
+        <div className="relative">
+          <Icon name="search" cls="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} className="w-full bg-[#f5f3f3] border-none rounded-full py-3 pl-12 pr-10 focus:ring-2 focus:ring-primary placeholder:text-on-surface-variant/50" placeholder="Cari perlengkapan anabul..." type="text" />
+          {q && (
+            <button onClick={() => setQ('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors">
+              <Icon name="close" cls="text-[18px]" />
+            </button>
+          )}
+        </div>
       </div>
     </header>
   )
 }
 
-function CatalogPage() {
-  const [q, setQ] = useState('')
+function CatalogPage({ q, setQ }) {
   const [selectedPath, setSelectedPath] = useState('all')
   const [maxPrice, setMaxPrice] = useState(1000000)
   const [openMap, setOpenMap] = useState({})
@@ -105,9 +108,6 @@ function CatalogPage() {
       <main className="flex-1 p-margin-page bg-surface">
         <div className="flex justify-between items-end mb-8 gap-3 flex-col md:flex-row">
           <h1 className="text-[16px] text-on-surface-variant">Showing {filtered.length} results</h1>
-          <div className="relative inline-block">
-            <input value={q} onChange={(e) => setQ(e.target.value)} className="appearance-none bg-white border border-surface-variant rounded-lg py-2 pl-4 pr-10 text-[14px]" placeholder="Cari produk..." />
-          </div>
         </div>
         <div className="flex gap-2 mb-8">
           <button onClick={() => { setQ(''); setSelectedPath('all'); setMaxPrice(1000000) }} className="bg-[#efeded] text-on-surface p-2 rounded-lg flex items-center hover:bg-[#eae8e7] transition-colors"><Icon name="close" cls="text-[18px]" /></button>
@@ -145,6 +145,9 @@ function ProductPage() {
 
   const activeVariantImage = p.variations?.[variant]?.option_image
   const mainImage = mainImageOverride || activeVariantImage || gallery[active]
+  const displayPrice = p.variations?.length > 0
+    ? (p.variations[variant]?.price ?? p.harga)
+    : p.harga
 
   return (
     <main className="max-w-[1440px] mx-auto px-margin-page py-4">
@@ -174,7 +177,7 @@ function ProductPage() {
         <div className="lg:col-span-7 space-y-8">
           <div className="space-y-4">
             <h1 className="text-[32px] font-bold leading-tight">{p.name}</h1>
-            <span className="text-[32px] text-primary font-bold">{formatHarga(p.harga)}</span>
+            <span className="text-[32px] text-primary font-bold">{formatHarga(displayPrice)}</span>
           </div>
           {p.variations?.length > 0 && (
             <div className="space-y-4">
@@ -198,7 +201,7 @@ function ProductPage() {
             </div>
           )}
           <div className="pt-6 border-t border-outline-variant">
-            <button className="w-full h-14 rounded-2xl bg-primary text-on-primary font-bold text-[16px] hover:opacity-90 transition-all">Lihat di Shopee</button>
+            <a href={p.link || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-full h-14 rounded-2xl bg-primary text-on-primary font-bold text-[16px] hover:opacity-90 transition-all">Lihat di Shopee</a>
           </div>
         </div>
       </div>
@@ -207,11 +210,12 @@ function ProductPage() {
 }
 
 export default function App() {
+  const [q, setQ] = useState('')
   return (
     <div className="bg-background text-on-surface min-h-screen">
-      <Header />
+      <Header q={q} setQ={setQ} />
       <Routes>
-        <Route path="/" element={<CatalogPage />} />
+        <Route path="/" element={<CatalogPage q={q} setQ={setQ} />} />
         <Route path="/product/:id" element={<ProductPage />} />
       </Routes>
       <footer className="bg-[#f5f3f3] border-t border-surface-variant mt-8">
